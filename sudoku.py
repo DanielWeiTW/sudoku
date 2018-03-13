@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 SIZE = 9
+found = False
 
 m = [
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
@@ -96,40 +97,46 @@ def find_next_zero(matrix, last_zero):
     return None
 
 
-def check(matrix, row_exist_number = [], column_exist_number = [] \
-        , matrix_exist_number = [], first_zero = None):
-    #if not node:
-    #    print 'found'
-    #    dump_matrix(matrix)
-    #    return
+def check(matrix):
+    global found
+    row_exist_number = [[] for x in xrange(SIZE)]
+    column_exist_number = [[] for x in xrange(SIZE)]
+    matrix_exist_number = [[] for x in xrange(SIZE)]
+    node = None
+    if found:
+        return
+    for i in xrange(SIZE):
+        for j in xrange(SIZE):
+            if matrix[i][j].value == 0 and not node:
+                node = Node(i, j, i / 3 * 3 + j / 3, matrix[i][j].value)
+            else:
+                if not matrix[i][j].value in row_exist_number[i]:
+                    row_exist_number[i].append(matrix[i][j].value)
+                if not matrix[i][j].value in column_exist_number[j]:
+                    column_exist_number[j].append(matrix[i][j].value)
+                # matrix number j / 3 + i / 3 * 3
+                matrix_number = j / 3 + i / 3 * 3
+                if not matrix[i][j].value in \
+                        matrix_exist_number[matrix_number]:
+                    matrix_exist_number[matrix_number].append(matrix[i][j].value)
 
-    #dump_matrix(matrix)
-    empty_i = first_zero / SIZE
-    empty_j = first_zero % SIZE
+    if not node:
+        print 'found'
+        found = True
+        dump_matrix(matrix)
+        return
+
     # matrix_number represent which sub matrix this empty space belongs
-    matrix_number = empty_i / 3 * 3 + empty_j / 3
+    matrix_number = node.row_n / 3 * 3 + node.column_n / 3
     for v in range(1, SIZE+1):
-        if not v in row_exist_number[empty_i] \
-                and not v in column_exist_number[empty_j] \
+        if not v in row_exist_number[node.row_n] \
+                and not v in column_exist_number[node.column_n] \
                 and not v in matrix_exist_number[matrix_number]:
-                    node = Node(empty_i, empty_j, matrix_number, v)
+                    node.value = v
                     new_matrix = deepcopy(matrix)
                     new_matrix[node.row_n][node.column_n] = node
-                    new_row_exist_number = deepcopy(row_exist_number)
-                    new_column_exist_number = deepcopy(column_exist_number)
-                    new_matrix_exist_number = deepcopy(matrix_exist_number)
-                    new_row_exist_number[empty_i].append(v)
-                    new_column_exist_number[empty_j].append(v)
-                    new_matrix_exist_number[matrix_number].append(v)
-                    new_first_zero = find_next_zero(new_matrix, first_zero)
-                    if not new_first_zero:
-                        dump_matrix(new_matrix)
-                        break
-                    else:
-                        check(new_matrix, new_row_exist_number, new_column_exist_number, \
-                                new_matrix_exist_number, new_first_zero)
+                    check(new_matrix)
 
 if __name__ == '__main__':
     matrix = construct_matrix(m)
-    row_exist_number, column_exist_number, matrix_exist_number, first_zero = collect_occupied_node(matrix)
-    check(matrix ,row_exist_number, column_exist_number, matrix_exist_number, first_zero)
+    check(matrix)
